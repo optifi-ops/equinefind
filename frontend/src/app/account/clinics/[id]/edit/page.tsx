@@ -18,7 +18,6 @@ export default function EditClinicPage({ params }: Props) {
   const eventId = params.id;
   const router = useRouter();
   const [venues, setVenues] = useState<Venue[]>([]);
-  const [debugPayload, setDebugPayload] = useState<string | null>(null);
   const { data: clinicData, isLoading: clinicLoading } = useClinicDetails(eventId);
   const updateClinic = useUpdateClinic(eventId);
 
@@ -65,14 +64,6 @@ export default function EditClinicPage({ params }: Props) {
         </div>
       )}
 
-      {debugPayload && (
-        <div className="card p-3 bg-yellow-50 border-yellow-500 text-xs">
-          <p className="font-medium mb-1">DEBUG — Submitted slot payload:</p>
-          <pre className="whitespace-pre-wrap overflow-auto max-h-64">{debugPayload}</pre>
-          <p className="mt-2">Mutation state: {updateClinic.isPending ? "PENDING" : updateClinic.isSuccess ? "SUCCESS" : updateClinic.isError ? "ERROR" : "idle"}</p>
-        </div>
-      )}
-
       <ClinicForm
         initialEvent={event}
         initialClinic={clinicData}
@@ -81,7 +72,6 @@ export default function EditClinicPage({ params }: Props) {
         loading={updateClinic.isPending}
         submitLabel="Save Changes"
         onSubmit={({ event: eventUpdates, clinicDetails, slots }) => {
-          setDebugPayload(JSON.stringify(slots, null, 2));
           updateClinic.mutate(
             { eventUpdates, clinicUpdates: clinicDetails, slots },
             {

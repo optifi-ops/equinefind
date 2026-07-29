@@ -81,7 +81,7 @@ export function ClinicForm({ initialEvent, initialClinic, initialSlots, venues, 
       slot_date: s.slot_date ?? "",
       max_capacity: s.max_capacity?.toString() ?? "",
       price: s.price_cents ? (s.price_cents / 100).toFixed(2) : "",
-      enable_time_blocks: !!s.duration_minutes,
+      enable_time_blocks: !!(s.duration_minutes || s.start_time || s.end_time),
       duration_minutes: s.duration_minutes?.toString() ?? "",
       start_time: s.start_time?.slice(0, 5) ?? "",
       end_time: s.end_time?.slice(0, 5) ?? "",
@@ -478,6 +478,7 @@ export function ClinicForm({ initialEvent, initialClinic, initialSlots, venues, 
                           type="number"
                           min="15"
                           step="15"
+                          required
                           value={slot.duration_minutes}
                           onChange={(e) => updateSlot(index, "duration_minutes", e.target.value)}
                           className="input"
@@ -488,6 +489,7 @@ export function ClinicForm({ initialEvent, initialClinic, initialSlots, venues, 
                         <label className="block text-xs text-slate mb-0.5">Start Time</label>
                         <input
                           type="time"
+                          required
                           value={slot.start_time}
                           onChange={(e) => updateSlot(index, "start_time", e.target.value)}
                           className="input"
@@ -497,6 +499,7 @@ export function ClinicForm({ initialEvent, initialClinic, initialSlots, venues, 
                         <label className="block text-xs text-slate mb-0.5">End Time</label>
                         <input
                           type="time"
+                          required
                           value={slot.end_time}
                           onChange={(e) => updateSlot(index, "end_time", e.target.value)}
                           className="input"
