@@ -71,7 +71,7 @@ export function useUpdateClinic(eventId: string) {
     }: {
       eventUpdates: Partial<Event>;
       clinicUpdates: Partial<Omit<ClinicDetails, "id" | "event_id" | "created_at">>;
-      slots?: { id?: string; name: string; description?: string; max_capacity?: number; price_cents?: number; sort_order: number }[];
+      slots?: { id?: string; name: string; description?: string; slot_date?: string; max_capacity?: number; price_cents?: number; sort_order: number; duration_minutes?: number; start_time?: string; end_time?: string; riders_per_lesson?: number }[];
     }) => clinicApi.updateClinic(eventId, eventUpdates, clinicUpdates, slots),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["organizer-clinics"] });

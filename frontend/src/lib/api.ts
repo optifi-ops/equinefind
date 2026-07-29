@@ -312,23 +312,25 @@ export const clinicApi = {
 
       for (const slot of slots) {
         if (slot.id) {
-          await supabase.from("clinic_slots").update({
+          const { error: updErr } = await supabase.from("clinic_slots").update({
             name: slot.name,
-            description: slot.description,
+            description: slot.description ?? null,
             slot_date: slot.slot_date ?? null,
-            max_capacity: slot.max_capacity,
-            price_cents: slot.price_cents,
+            max_capacity: slot.max_capacity ?? null,
+            price_cents: slot.price_cents ?? null,
             sort_order: slot.sort_order,
             duration_minutes: slot.duration_minutes ?? null,
             start_time: slot.start_time ?? null,
             end_time: slot.end_time ?? null,
             riders_per_lesson: slot.riders_per_lesson ?? 1,
           }).eq("id", slot.id);
+          if (updErr) throw new Error(updErr.message);
         } else {
-          await supabase.from("clinic_slots").insert({
+          const { error: insErr } = await supabase.from("clinic_slots").insert({
             ...slot,
             clinic_detail_id: cd.id,
           });
+          if (insErr) throw new Error(insErr.message);
         }
       }
     }
