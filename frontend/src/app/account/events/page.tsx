@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useSavedEvents } from "@/hooks/useSavedEvents";
@@ -16,6 +17,7 @@ export default function AccountEventsPage() {
   const { data: horses } = useHorses();
   const { data: mySignups } = useMySignups();
   const cancelSignup = useCancelSignup();
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -91,15 +93,39 @@ export default function AccountEventsPage() {
                   }`}>
                     {signup.status}
                   </span>
-                  <button
-                    onClick={() => {
-                      if (confirm("Cancel this signup?")) cancelSignup.mutate(signup.id);
-                    }}
-                    className="p-1 text-slate hover:text-red-500 transition-colors"
-                    title="Cancel signup"
-                  >
-                    <XCircle size={14} />
-                  </button>
+                  {confirmingId === signup.id ? (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => {
+                          cancelSignup.mutate(signup.id, {
+                            onSuccess: () => setConfirmingId(null),
+                            onError: (err) => {
+                              alert("Failed to cancel: " + (err as Error).message);
+                              setConfirmingId(null);
+                            },
+                          });
+                        }}
+                        disabled={cancelSignup.isPending}
+                        className="text-xs px-2 py-0.5 bg-red-500 text-white rounded hover:bg-red-600"
+                      >
+                        {cancelSignup.isPending ? "..." : "Confirm"}
+                      </button>
+                      <button
+                        onClick={() => setConfirmingId(null)}
+                        className="text-xs px-2 py-0.5 text-slate hover:text-charcoal"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmingId(signup.id)}
+                      className="p-1 text-slate hover:text-red-500 transition-colors"
+                      title="Cancel signup"
+                    >
+                      <XCircle size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
