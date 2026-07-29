@@ -200,9 +200,11 @@ export function ClinicSignupDialog({ open, onOpenChange, slot, isFull, eventId, 
                   </button>
                 ))
               ) : (
-                <div className="text-center py-4">
-                  <p className="text-sm text-slate">No horses in your profile yet.</p>
-                  <p className="text-xs text-slate mt-1">Add horses in Account → My Horses first.</p>
+                <div className="text-center py-6 space-y-3">
+                  <p className="text-sm text-slate">You need to add a horse to your profile before signing up.</p>
+                  <a href="/account/horses" className="btn-primary inline-flex text-sm">
+                    Add a Horse
+                  </a>
                 </div>
               )}
             </div>
