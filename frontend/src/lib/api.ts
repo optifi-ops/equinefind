@@ -312,7 +312,7 @@ export const clinicApi = {
 
       for (const slot of slots) {
         if (slot.id) {
-          const { error: updErr } = await supabase.from("clinic_slots").update({
+          const { error: updErr, data: updData } = await supabase.from("clinic_slots").update({
             name: slot.name,
             description: slot.description ?? null,
             slot_date: slot.slot_date ?? null,
@@ -323,8 +323,11 @@ export const clinicApi = {
             start_time: slot.start_time ?? null,
             end_time: slot.end_time ?? null,
             riders_per_lesson: slot.riders_per_lesson ?? 1,
-          }).eq("id", slot.id);
+          }).eq("id", slot.id).select();
           if (updErr) throw new Error(updErr.message);
+          if (!updData || updData.length === 0) {
+            throw new Error(`Slot update returned no rows for id ${slot.id} — likely blocked by RLS. Are you signed in as the clinic organizer?`);
+          }
         } else {
           const { error: insErr } = await supabase.from("clinic_slots").insert({
             ...slot,

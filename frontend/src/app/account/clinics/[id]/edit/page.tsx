@@ -58,6 +58,12 @@ export default function EditClinicPage({ params }: Props) {
         <p className="text-slate text-sm mt-1">{event.title}</p>
       </header>
 
+      {updateClinic.error && (
+        <div className="card p-3 bg-red-50 border-red-500 text-red-700 text-sm">
+          Save failed: {(updateClinic.error as Error).message}
+        </div>
+      )}
+
       <ClinicForm
         initialEvent={event}
         initialClinic={clinicData}
