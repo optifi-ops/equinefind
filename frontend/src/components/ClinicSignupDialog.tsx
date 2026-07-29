@@ -30,6 +30,7 @@ export function ClinicSignupDialog({ open, onOpenChange, slot, isFull, eventId, 
   const [selectedHorseIds, setSelectedHorseIds] = useState<string[]>([]);
   const [horseTimeMap, setHorseTimeMap] = useState<Record<string, string>>({});
   const [riderNotes, setRiderNotes] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const hasTimeBlocks = !!(slot.duration_minutes && slot.start_time && slot.end_time);
 
@@ -58,6 +59,7 @@ export function ClinicSignupDialog({ open, onOpenChange, slot, isFull, eventId, 
     setSelectedHorseIds([]);
     setHorseTimeMap({});
     setRiderNotes("");
+    setError(null);
   };
 
   const handleClose = (open: boolean) => {
@@ -100,6 +102,7 @@ export function ClinicSignupDialog({ open, onOpenChange, slot, isFull, eventId, 
   const handleSubmit = () => {
     if (!user) return;
 
+    setError(null);
     createSignup.mutate(
       {
         clinic_slot_id: slot.id,
@@ -116,6 +119,9 @@ export function ClinicSignupDialog({ open, onOpenChange, slot, isFull, eventId, 
       {
         onSuccess: () => {
           handleClose(false);
+        },
+        onError: (err) => {
+          setError((err as Error).message);
         },
       }
     );
@@ -285,6 +291,10 @@ export function ClinicSignupDialog({ open, onOpenChange, slot, isFull, eventId, 
                 />
               </div>
             </div>
+          )}
+
+          {error && (
+            <p className="text-sm text-red-500 bg-red-50 p-2 rounded mt-3">{error}</p>
           )}
 
           {/* Navigation */}
