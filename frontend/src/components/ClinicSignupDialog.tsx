@@ -132,6 +132,11 @@ export function ClinicSignupDialog({ open, onOpenChange, slot, isFull, eventId, 
           <div className="flex items-center justify-between mb-4">
             <Dialog.Title className="font-display text-xl text-charcoal">
               {isFull ? "Join Waitlist" : "Sign Up"} — {slot.name}
+              {slot.slot_date && (
+                <span className="text-sm text-slate font-normal ml-2">
+                  {new Date(slot.slot_date + "T00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                </span>
+              )}
             </Dialog.Title>
             <Dialog.Close className="text-slate hover:text-charcoal">
               <X size={18} />

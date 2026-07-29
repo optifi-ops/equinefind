@@ -21,6 +21,7 @@ export interface ClinicSlot {
   sort_order: number;
   created_at: string;
   signup_count?: number;
+  slot_date?: string;
   duration_minutes?: number;
   start_time?: string;
   end_time?: string;

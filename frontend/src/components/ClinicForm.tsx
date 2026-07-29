@@ -29,6 +29,7 @@ interface SlotDraft {
   id?: string;
   name: string;
   description: string;
+  slot_date: string;
   max_capacity: string;
   price: string;
   enable_time_blocks: boolean;
@@ -41,7 +42,7 @@ interface SlotDraft {
 interface ClinicFormData {
   event: Partial<Event>;
   clinicDetails: Omit<ClinicDetails, "id" | "event_id" | "created_at">;
-  slots: { id?: string; name: string; description?: string; max_capacity?: number; price_cents?: number; sort_order: number; duration_minutes?: number; start_time?: string; end_time?: string; riders_per_lesson?: number }[];
+  slots: { id?: string; name: string; description?: string; slot_date?: string; max_capacity?: number; price_cents?: number; sort_order: number; duration_minutes?: number; start_time?: string; end_time?: string; riders_per_lesson?: number }[];
 }
 
 interface Props {
@@ -70,13 +71,14 @@ export function ClinicForm({ initialEvent, initialClinic, initialSlots, venues, 
   const [signupCloseDate, setSignupCloseDate] = useState(initialClinic?.signup_close_date ?? "");
   const [notes, setNotes] = useState(initialClinic?.notes ?? "");
 
-  const emptySlot: SlotDraft = { name: "", description: "", max_capacity: "", price: "", enable_time_blocks: false, duration_minutes: "", start_time: "", end_time: "", riders_per_lesson: "1" };
+  const emptySlot: SlotDraft = { name: "", description: "", slot_date: "", max_capacity: "", price: "", enable_time_blocks: false, duration_minutes: "", start_time: "", end_time: "", riders_per_lesson: "1" };
 
   const [slots, setSlots] = useState<SlotDraft[]>(
     initialSlots?.map((s) => ({
       id: s.id,
       name: s.name,
       description: s.description ?? "",
+      slot_date: s.slot_date ?? "",
       max_capacity: s.max_capacity?.toString() ?? "",
       price: s.price_cents ? (s.price_cents / 100).toFixed(2) : "",
       enable_time_blocks: !!s.duration_minutes,
@@ -154,6 +156,7 @@ export function ClinicForm({ initialEvent, initialClinic, initialSlots, venues, 
         ...(s.id ? { id: s.id } : {}),
         name: s.name.trim(),
         description: s.description.trim() || undefined,
+        slot_date: s.slot_date || undefined,
         max_capacity: s.max_capacity ? parseInt(s.max_capacity) : undefined,
         price_cents: s.price ? Math.round(parseFloat(s.price) * 100) : undefined,
         sort_order: i,
@@ -410,6 +413,18 @@ export function ClinicForm({ initialEvent, initialClinic, initialSlots, venues, 
                   onChange={(e) => updateSlot(index, "description", e.target.value)}
                   className="input"
                   placeholder="Optional details about this slot type"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs text-slate mb-0.5">Date</label>
+                <input
+                  type="date"
+                  value={slot.slot_date}
+                  onChange={(e) => updateSlot(index, "slot_date", e.target.value)}
+                  min={startDate || undefined}
+                  max={endDate || startDate || undefined}
+                  className="input"
                 />
               </div>
 

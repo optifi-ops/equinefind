@@ -96,7 +96,14 @@ export function ClinicSignupSection({ eventId }: Props) {
           return (
             <div key={slot.id} className="border border-border rounded p-4 flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-charcoal">{slot.name}</p>
+                <p className="font-medium text-charcoal">
+                  {slot.name}
+                  {slot.slot_date && (
+                    <span className="text-sm text-slate font-normal ml-2">
+                      {new Date(slot.slot_date + "T00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                    </span>
+                  )}
+                </p>
                 {slot.description && <p className="text-xs text-slate mt-0.5">{slot.description}</p>}
                 <div className="flex items-center gap-3 mt-1">
                   {slot.price_cents ? (

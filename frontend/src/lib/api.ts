@@ -285,7 +285,7 @@ export const clinicApi = {
     eventId: string,
     eventUpdates: Partial<Event>,
     clinicUpdates: Partial<Omit<ClinicDetails, "id" | "event_id" | "created_at">>,
-    slots?: { id?: string; name: string; description?: string; max_capacity?: number; price_cents?: number; sort_order: number; duration_minutes?: number; start_time?: string; end_time?: string; riders_per_lesson?: number }[]
+    slots?: { id?: string; name: string; description?: string; slot_date?: string; max_capacity?: number; price_cents?: number; sort_order: number; duration_minutes?: number; start_time?: string; end_time?: string; riders_per_lesson?: number }[]
   ): Promise<void> => {
     await eventsApi.update(eventId, eventUpdates);
 
@@ -315,6 +315,7 @@ export const clinicApi = {
           await supabase.from("clinic_slots").update({
             name: slot.name,
             description: slot.description,
+            slot_date: slot.slot_date ?? null,
             max_capacity: slot.max_capacity,
             price_cents: slot.price_cents,
             sort_order: slot.sort_order,
