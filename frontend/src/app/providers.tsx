@@ -5,7 +5,18 @@ import { useState } from "react";
 import { AuthProvider } from "@/components/AuthProvider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 1000 * 60, // 1 min — avoid immediate refetches
+            refetchOnWindowFocus: false,
+            retry: 1,
+          },
+        },
+      })
+  );
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>{children}</AuthProvider>

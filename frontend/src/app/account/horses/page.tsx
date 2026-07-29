@@ -16,6 +16,7 @@ export default function AccountHorsesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingHorse, setEditingHorse] = useState<Horse | undefined>(undefined);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -40,9 +41,9 @@ export default function AccountHorsesPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm("Remove this horse? It will also be removed from any saved events.")) return;
     setDeletingId(id);
     deleteHorse.mutate(id, {
+      onSuccess: () => setConfirmingId(null),
       onSettled: () => setDeletingId(null),
     });
   };
@@ -79,26 +80,42 @@ export default function AccountHorsesPage() {
                   <h3 className="font-medium text-charcoal">{horse.name}</h3>
                   {horse.breed && <p className="text-sm text-slate">{horse.breed}</p>}
                 </div>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => openEdit(horse)}
-                    className="p-1.5 text-slate hover:text-hunter transition-colors"
-                    title="Edit"
-                  >
-                    <Pencil size={14} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(horse.id)}
-                    disabled={deletingId === horse.id}
-                    className="p-1.5 text-slate hover:text-red-500 transition-colors"
-                    title="Delete"
-                  >
-                    {deletingId === horse.id
-                      ? <Loader2 size={14} className="animate-spin" />
-                      : <Trash2 size={14} />
-                    }
-                  </button>
-                </div>
+                {confirmingId === horse.id ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-slate">Remove?</span>
+                    <button
+                      onClick={() => handleDelete(horse.id)}
+                      disabled={deletingId === horse.id}
+                      className="text-xs px-2 py-0.5 bg-red-500 text-white rounded hover:bg-red-600"
+                      title="This horse will also be removed from any saved events."
+                    >
+                      {deletingId === horse.id ? "..." : "Yes"}
+                    </button>
+                    <button
+                      onClick={() => setConfirmingId(null)}
+                      className="text-xs px-2 py-0.5 text-slate hover:text-charcoal"
+                    >
+                      No
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => openEdit(horse)}
+                      className="p-1.5 text-slate hover:text-hunter transition-colors"
+                      title="Edit"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => setConfirmingId(horse.id)}
+                      className="p-1.5 text-slate hover:text-red-500 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
 
               {horse.disciplines.length > 0 && (

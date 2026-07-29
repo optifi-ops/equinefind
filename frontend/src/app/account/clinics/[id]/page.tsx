@@ -26,7 +26,7 @@ export default function ClinicManagementPage({ params }: Props) {
   const eventId = params.id;
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
   const { data: clinicData, isLoading: clinicLoading } = useClinicDetails(eventId);
-  const { data: counts } = useClinicSlotCounts(clinicData?.id);
+  const { data: _counts } = useClinicSlotCounts(clinicData?.id);
   const { data: signups, isLoading: signupsLoading } = useClinicSignups(clinicData?.id);
   const updateSignup = useUpdateSignup();
 

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@/hooks/useAuth";
 import { useSavedEvents } from "@/hooks/useSavedEvents";
 import { useHorses } from "@/hooks/useHorses";
 import { useMySignups, useCancelSignup } from "@/hooks/useClinicSignups";
@@ -12,12 +11,12 @@ import { CalendarDays, Loader2, XCircle } from "lucide-react";
 import type { Horse } from "@/types/horse";
 
 export default function AccountEventsPage() {
-  const { user } = useAuth();
   const { data: savedEvents, isLoading } = useSavedEvents();
   const { data: horses } = useHorses();
   const { data: mySignups } = useMySignups();
   const cancelSignup = useCancelSignup();
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -75,6 +74,11 @@ export default function AccountEventsPage() {
       {activeSignups.length > 0 && (
         <section className="space-y-3">
           <h2 className="font-display text-lg text-charcoal">Clinic Signups</h2>
+          {cancelError && (
+            <div className="px-3 py-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+              Failed to cancel: {cancelError}
+            </div>
+          )}
           <div className="space-y-2">
             {activeSignups.map((signup) => (
               <div key={signup.id} className="card p-3 flex items-center justify-between">
@@ -97,10 +101,11 @@ export default function AccountEventsPage() {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => {
+                          setCancelError(null);
                           cancelSignup.mutate(signup.id, {
                             onSuccess: () => setConfirmingId(null),
                             onError: (err) => {
-                              alert("Failed to cancel: " + (err as Error).message);
+                              setCancelError((err as Error).message);
                               setConfirmingId(null);
                             },
                           });

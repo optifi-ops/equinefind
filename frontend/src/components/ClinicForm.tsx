@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Trash2, GripVertical, Clock } from "lucide-react";
+import { useState } from "react";
+import { Plus, Trash2, Clock } from "lucide-react";
 import type { Event } from "@/types/event";
 import type { ClinicDetails, ClinicSlot } from "@/types/clinic";
 import { generateTimeBlocks } from "@/lib/timeBlocks";

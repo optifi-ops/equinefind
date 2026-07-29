@@ -2,7 +2,7 @@ import { supabase } from "./auth";
 import type { Event, EventListItem, EventFilters, PaginatedEvents } from "@/types/event";
 import type { Venue } from "@/types/venue";
 import type { Horse } from "@/types/horse";
-import type { ClinicDetails, ClinicSlot, ClinicSignup, ClinicSignupHorse, ClinicWithSlots } from "@/types/clinic";
+import type { ClinicDetails, ClinicSlot, ClinicSignup, ClinicWithSlots } from "@/types/clinic";
 
 export interface SavedEventWithMeta extends EventListItem {
   saved_event_id: string;
@@ -379,6 +379,7 @@ export const clinicSignupApi = {
     return (data ?? []).map((s: any) => ({
       ...s,
       slot_name: slotMap.get(s.clinic_slot_id) ?? "",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       horses: (s.clinic_signup_horses ?? []).map((h: any) => ({
         ...h,
         horse: h.horse ?? undefined,

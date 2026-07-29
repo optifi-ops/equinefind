@@ -82,7 +82,7 @@ export default function NewEventPage() {
 
   const availableLevels = form.disciplines.flatMap((d) => LEVELS_BY_DISCIPLINE[d] ?? []);
 
-  const handleSubmit = async (e: React.FormEvent, draft = false) => {
+  const handleSubmit = async (e: React.FormEvent, _draft = false) => {
     e.preventDefault();
     if (!form.venue_id) { setError("Please select a venue."); return; }
     if (!form.disciplines.length) { setError("Please select at least one discipline."); return; }

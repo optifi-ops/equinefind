@@ -1,6 +1,7 @@
 import { SearchBar } from "@/components/SearchBar";
 import { DisciplineChips } from "@/components/DisciplineChips";
 import { HomepageEvents } from "@/components/HomepageEvents";
+import { HomeEventTypeToggle } from "@/components/HomeEventTypeToggle";
 
 export default function HomePage() {
   return (
@@ -26,27 +27,11 @@ export default function HomePage() {
         </div>
 
         {/* Event type toggle */}
-        <EventTypeToggle />
+        <HomeEventTypeToggle />
 
         {/* Near-you events */}
         <HomepageEvents />
       </section>
-    </div>
-  );
-}
-
-function EventTypeToggle() {
-  return (
-    <div className="flex justify-center gap-0 mt-4 mb-8">
-      <button className="px-5 py-2 text-sm font-medium bg-hunter text-white rounded-l border border-hunter">
-        All
-      </button>
-      <button className="px-5 py-2 text-sm font-medium bg-white text-charcoal border-y border-border hover:text-hunter transition-colors">
-        Recognized
-      </button>
-      <button className="px-5 py-2 text-sm font-medium bg-white text-charcoal rounded-r border border-border hover:text-hunter transition-colors">
-        Schooling
-      </button>
     </div>
   );
 }

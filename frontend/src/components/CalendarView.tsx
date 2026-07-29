@@ -14,7 +14,6 @@ import {
   parseISO,
   addMonths,
   subMonths,
-  isSameDay,
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { EventListItem } from "@/types/event";

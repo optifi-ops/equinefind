@@ -8,7 +8,6 @@ import { useHorses } from "@/hooks/useHorses";
 import { useCreateSignup } from "@/hooks/useClinicSignups";
 import { generateTimeBlocks, markAvailability, formatTimeValue } from "@/lib/timeBlocks";
 import type { ClinicSlot } from "@/types/clinic";
-import type { Horse } from "@/types/horse";
 
 type Step = "horses" | "times" | "confirm";
 
