@@ -304,11 +304,20 @@ export const clinicApi = {
       if (!cd) throw new Error("Clinic details not found");
 
       const existingIds = slots.filter((s) => s.id).map((s) => s.id!);
-      await supabase
-        .from("clinic_slots")
-        .delete()
-        .eq("clinic_detail_id", cd.id)
-        .not("id", "in", `(${existingIds.join(",")})`);
+      if (existingIds.length > 0) {
+        const { error: delErr } = await supabase
+          .from("clinic_slots")
+          .delete()
+          .eq("clinic_detail_id", cd.id)
+          .not("id", "in", `(${existingIds.join(",")})`);
+        if (delErr) throw new Error(`Delete failed: ${delErr.message}`);
+      } else {
+        const { error: delErr } = await supabase
+          .from("clinic_slots")
+          .delete()
+          .eq("clinic_detail_id", cd.id);
+        if (delErr) throw new Error(`Delete failed: ${delErr.message}`);
+      }
 
       for (const slot of slots) {
         if (slot.id) {
