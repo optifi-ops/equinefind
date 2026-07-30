@@ -1,4 +1,14 @@
-import type { Horse } from "./horse";
+/**
+ * The only horse fields an organizer is allowed to see for a signup — barn name,
+ * age (via birth year), and gender. Everything else on the horse profile stays
+ * private to the owner. Sourced from the `clinic_signup_horse_public` DB view.
+ */
+export interface SignupHorseSummary {
+  id: string;
+  name: string;
+  birth_year?: number;
+  gender?: string;
+}
 
 export interface ClinicDetails {
   id: string;
@@ -38,7 +48,7 @@ export interface ClinicSignupHorse {
   ride_time?: string;
   sort_order: number;
   created_at: string;
-  horse?: Horse;
+  horse?: SignupHorseSummary;
 }
 
 export interface ClinicSignup {

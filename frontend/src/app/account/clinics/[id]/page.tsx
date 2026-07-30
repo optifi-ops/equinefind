@@ -6,8 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useClinicDetails, useClinicSlotCounts } from "@/hooks/useClinics";
 import { useClinicSignups, useUpdateSignup } from "@/hooks/useClinicSignups";
 import { formatDateRange, horseAge, horseAgeLabel } from "@/lib/utils";
-import * as Popover from "@radix-ui/react-popover";
-import { Loader2, Download, Pencil, Check, X, Users, Calendar, MapPin, Info } from "lucide-react";
+import { Loader2, Download, Pencil, Check, X, Users, Calendar, MapPin } from "lucide-react";
 import { formatTimeValue } from "@/lib/timeBlocks";
 import { ClinicScheduler } from "@/components/ClinicScheduler";
 import type { ClinicSignup, ClinicSignupHorse } from "@/types/clinic";
@@ -84,7 +83,7 @@ export default function ClinicManagementPage({ params }: Props) {
   const exportCSV = () => {
     if (!signups) return;
     const active = signups.filter((s) => s.status !== "cancelled");
-    const headers = ["Slot", "Rider Name", "Email", "Barn Name", "Registered Name", "Age", "Gender", "Breed", "Disciplines", "Registration #", "Status", "Payment", "Ride Time", "Rider Notes", "Organizer Notes", "Signed Up"];
+    const headers = ["Slot", "Rider Name", "Email", "Barn Name", "Age", "Gender", "Status", "Payment", "Ride Time", "Rider Notes", "Organizer Notes", "Signed Up"];
     const rows: string[][] = [];
     for (const s of active) {
       if (s.horses && s.horses.length > 0) {
@@ -92,8 +91,7 @@ export default function ClinicManagementPage({ params }: Props) {
           const h = sh.horse;
           rows.push([
             s.slot_name, s.rider_name, s.rider_email,
-            h?.name ?? "Removed", h?.registered_name ?? "", (horseAge(h?.birth_year)?.toString() ?? ""), h?.gender ?? "", h?.breed ?? "",
-            h?.disciplines?.join(", ") ?? "", h?.usef_number ?? "",
+            h?.name ?? "Removed", (horseAge(h?.birth_year)?.toString() ?? ""), h?.gender ?? "",
             s.status, s.payment_status,
             sh.ride_time ? formatTimeValue(sh.ride_time) : "",
             s.rider_notes ?? "", s.organizer_notes ?? "",
@@ -103,7 +101,7 @@ export default function ClinicManagementPage({ params }: Props) {
       } else {
         rows.push([
           s.slot_name, s.rider_name, s.rider_email,
-          s.horse_name ?? "", "", "", "", "", "", "",
+          s.horse_name ?? "", "", "",
           s.status, s.payment_status,
           s.ride_time ?? "",
           s.rider_notes ?? "", s.organizer_notes ?? "",
@@ -458,47 +456,9 @@ function HorseTag({ signupHorse }: { signupHorse: ClinicSignupHorse }) {
   const meta = [horseAgeLabel(horse.birth_year), horse.gender].filter(Boolean).join(" • ");
 
   return (
-    <Popover.Root>
-      <Popover.Trigger className="text-xs cursor-pointer flex items-center gap-1 text-left">
-        <span className="text-hunter hover:underline font-medium">{horse.name}</span>
-        {meta && <span className="text-slate">· {meta}</span>}
-        <Info size={10} className="text-slate flex-shrink-0" />
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content className="bg-white border border-border rounded-lg shadow-lg p-4 w-64 z-50" sideOffset={5}>
-          <p className="font-medium text-charcoal text-sm">{horse.name}</p>
-          {horse.registered_name && (
-            <p className="text-xs text-slate italic mb-2">{horse.registered_name}</p>
-          )}
-          <div className="space-y-1 text-xs mt-2">
-            {horseAgeLabel(horse.birth_year) && (
-              <p><span className="text-slate">Age:</span> <span className="text-charcoal">{horseAgeLabel(horse.birth_year)} ({horse.birth_year})</span></p>
-            )}
-            {horse.gender && (
-              <p><span className="text-slate">Gender:</span> <span className="text-charcoal">{horse.gender}</span></p>
-            )}
-            {horse.breed && (
-              <p><span className="text-slate">Breed:</span> <span className="text-charcoal">{horse.breed}</span></p>
-            )}
-            {horse.disciplines && horse.disciplines.length > 0 && (
-              <p><span className="text-slate">Disciplines:</span> <span className="text-charcoal">{horse.disciplines.join(", ")}</span></p>
-            )}
-            {horse.usef_number && (
-              <p><span className="text-slate">USEF #:</span> <span className="text-charcoal">{horse.usef_number}</span></p>
-            )}
-            {horse.usea_number && (
-              <p><span className="text-slate">USEA #:</span> <span className="text-charcoal">{horse.usea_number}</span></p>
-            )}
-            {horse.usdf_number && (
-              <p><span className="text-slate">USDF #:</span> <span className="text-charcoal">{horse.usdf_number}</span></p>
-            )}
-            {horse.birth_year == null && !horse.gender && !horse.breed && !horse.disciplines?.length && !horse.usef_number && (
-              <p className="text-slate italic">No profile details</p>
-            )}
-          </div>
-          <Popover.Arrow className="fill-white" />
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+    <span className="text-xs">
+      <span className="text-charcoal font-medium">{horse.name}</span>
+      {meta && <span className="text-slate"> · {meta}</span>}
+    </span>
   );
 }

@@ -371,10 +371,31 @@ export const clinicSignupApi = {
     const slotMap = new Map(slots.map((s) => [s.id, s.name]));
     const { data, error } = await supabase
       .from("clinic_signups")
-      .select("*, clinic_signup_horses(*, horse:horses(*))")
+      .select("*, clinic_signup_horses(id, clinic_signup_id, horse_id, ride_time, sort_order, created_at)")
       .in("clinic_slot_id", slots.map((s) => s.id))
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
+
+    // Horse profiles are private — organizers may only see barn name / age / gender,
+    // served through the security-definer `clinic_signup_horse_public` view.
+    const signupIds = (data ?? []).map((s) => s.id);
+    const safeByHorseRow = new Map<string, { id: string; name: string; birth_year?: number; gender?: string }>();
+    if (signupIds.length > 0) {
+      const { data: safeRows, error: safeErr } = await supabase
+        .from("clinic_signup_horse_public")
+        .select("signup_horse_id, horse_id, barn_name, birth_year, gender")
+        .in("clinic_signup_id", signupIds);
+      if (safeErr) throw new Error(safeErr.message);
+      for (const r of safeRows ?? []) {
+        safeByHorseRow.set(r.signup_horse_id, {
+          id: r.horse_id,
+          name: r.barn_name,
+          birth_year: r.birth_year ?? undefined,
+          gender: r.gender ?? undefined,
+        });
+      }
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (data ?? []).map((s: any) => ({
       ...s,
@@ -382,7 +403,7 @@ export const clinicSignupApi = {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       horses: (s.clinic_signup_horses ?? []).map((h: any) => ({
         ...h,
-        horse: h.horse ?? undefined,
+        horse: safeByHorseRow.get(h.id) ?? undefined,
       })),
       clinic_signup_horses: undefined,
     })) as (ClinicSignup & { slot_name: string })[];
