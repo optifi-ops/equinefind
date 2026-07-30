@@ -15,7 +15,6 @@ interface Entry {
   horseName: string;
   horseMeta: string; // "8 yrs • Gelding"
   status: ClinicSignup["status"];
-  time: string; // "HH:MM" for <input type="time">, "" if unset
 }
 
 interface Props {
@@ -68,10 +67,12 @@ function SlotScheduler({
   const saveSchedule = useSaveSchedule();
   const rideLength = slot.duration_minutes ?? DEFAULT_RIDE_LENGTH;
 
-  // Build the initial running order: signups in the order they registered,
-  // and within each signup the horses in their stored order.
-  const initialEntries = useMemo<Entry[]>(() => {
-    const rows: { entry: Entry; sort: number; created: number }[] = [];
+  // Build the initial running order + the time ladder. Times are pinned to
+  // POSITIONS, not riders: `times[i]` is the ride time for whoever sits at
+  // row i. Moving a rider up/down changes which time they occupy — the times
+  // themselves stay in place and in order.
+  const initial = useMemo<{ list: Entry[]; times: string[] }>(() => {
+    const rows: { entry: Entry; time: string; sort: number; created: number }[] = [];
     signups.forEach((s) => {
       const created = new Date(s.created_at).getTime();
       const horses = [...(s.horses ?? [])].sort((a, b) => a.sort_order - b.sort_order);
@@ -85,8 +86,8 @@ function SlotScheduler({
               .filter(Boolean)
               .join(" • "),
             status: s.status,
-            time: toTimeInputValue(h.ride_time),
           },
+          time: toTimeInputValue(h.ride_time),
           sort: h.sort_order,
           created,
         });
@@ -98,15 +99,18 @@ function SlotScheduler({
     rows.sort((a, b) =>
       anyOrdered ? a.sort - b.sort || a.created - b.created : a.created - b.created
     );
-    return rows.map((r) => r.entry);
+    return { list: rows.map((r) => r.entry), times: rows.map((r) => r.time) };
   }, [signups]);
 
-  const [entries, setEntries] = useState<Entry[]>(initialEntries);
+  const [entries, setEntries] = useState<Entry[]>(initial.list);
+  const [times, setTimes] = useState<string[]>(initial.times);
   const [startTime, setStartTime] = useState<string>(
-    () => initialEntries.find((e) => e.time)?.time ?? "08:00"
+    () => initial.times.find(Boolean) ?? "08:00"
   );
   const [dirty, setDirty] = useState(false);
 
+  // Move only the RIDER; the time stays anchored to the position, so the rider
+  // who moves up takes the earlier time and the displaced rider takes the later one.
   const move = (index: number, dir: -1 | 1) => {
     const target = index + dir;
     if (target < 0 || target >= entries.length) return;
@@ -117,25 +121,20 @@ function SlotScheduler({
   };
 
   const setRowTime = (index: number, value: string) => {
-    setEntries((prev) => prev.map((e, i) => (i === index ? { ...e, time: value } : e)));
+    setTimes((prev) => prev.map((t, i) => (i === index ? value : t)));
     setDirty(true);
   };
 
   const autoAssign = () => {
     if (!startTime) return;
-    setEntries((prev) =>
-      prev.map((e, i) => ({
-        ...e,
-        time: toTimeInputValue(addMinutesToTime(startTime, i * rideLength)),
-      }))
-    );
+    setTimes(entries.map((_, i) => toTimeInputValue(addMinutesToTime(startTime, i * rideLength))));
     setDirty(true);
   };
 
   const handleSave = () => {
     const rows = entries.map((e, i) => ({
       id: e.id,
-      ride_time: e.time ? `${e.time}:00` : null,
+      ride_time: times[i] ? `${times[i]}:00` : null,
       sort_order: i,
     }));
     saveSchedule.mutate(rows, { onSuccess: () => setDirty(false) });
@@ -258,7 +257,7 @@ function SlotScheduler({
                   <td className="px-3 py-2">
                     <input
                       type="time"
-                      value={e.time}
+                      value={times[i] ?? ""}
                       onChange={(ev) => setRowTime(i, ev.target.value)}
                       className="input py-1 text-sm w-28"
                     />
