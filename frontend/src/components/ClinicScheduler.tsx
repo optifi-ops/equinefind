@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { ChevronUp, ChevronDown, Loader2, Wand2, Clock, Calendar as CalendarIcon } from "lucide-react";
 import { useSaveSchedule } from "@/hooks/useClinicSignups";
 import { addMinutesToTime, toTimeInputValue } from "@/lib/timeBlocks";
+import { horseAgeLabel } from "@/lib/utils";
 import type { ClinicSlot, ClinicSignup } from "@/types/clinic";
 
 const DEFAULT_RIDE_LENGTH = 45;
@@ -80,7 +81,7 @@ function SlotScheduler({
             id: h.id,
             riderName: s.rider_name,
             horseName: h.horse?.name ?? "Horse removed",
-            horseMeta: [h.horse?.age != null ? `${h.horse.age} yrs` : null, h.horse?.gender]
+            horseMeta: [horseAgeLabel(h.horse?.birth_year), h.horse?.gender]
               .filter(Boolean)
               .join(" • "),
             status: s.status,

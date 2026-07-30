@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useHorses } from "@/hooks/useHorses";
 import { useCreateSignup } from "@/hooks/useClinicSignups";
 import { generateTimeBlocks, markAvailability, formatTimeValue, ENABLE_TIME_BLOCK_SIGNUP } from "@/lib/timeBlocks";
+import { horseAgeLabel } from "@/lib/utils";
 import type { ClinicSlot } from "@/types/clinic";
 
 type Step = "horses" | "times" | "confirm";
@@ -201,7 +202,7 @@ export function ClinicSignupDialog({ open, onOpenChange, slot, isFull, eventId, 
                     <div>
                       <p className="font-medium text-charcoal text-sm">{horse.name}</p>
                       <p className="text-xs text-slate">
-                        {[horse.age != null ? `${horse.age} yrs` : null, horse.gender, horse.breed]
+                        {[horseAgeLabel(horse.birth_year), horse.gender, horse.breed]
                           .filter(Boolean)
                           .join(" • ") || "No details"}
                       </p>

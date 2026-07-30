@@ -16,6 +16,19 @@ export function formatDateRange(start: string, end: string): string {
   return `${format(s, "MMM d")} – ${format(e, "MMM d, yyyy")}`;
 }
 
+/** Current age in years from a birth year (calendar-year based, as is standard for horses). */
+export function horseAge(birthYear?: number | null): number | null {
+  if (birthYear == null) return null;
+  const age = new Date().getFullYear() - birthYear;
+  return age >= 0 && age < 60 ? age : null;
+}
+
+/** Compact age label, e.g. "8 yrs", or null if no valid birth year. */
+export function horseAgeLabel(birthYear?: number | null): string | null {
+  const age = horseAge(birthYear);
+  return age == null ? null : `${age} yrs`;
+}
+
 export function formatDiscipline(d: string): string {
   const map: Record<string, string> = {
     show_jumping: "Show Jumping",

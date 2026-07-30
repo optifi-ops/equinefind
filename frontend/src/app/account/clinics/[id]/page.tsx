@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useClinicDetails, useClinicSlotCounts } from "@/hooks/useClinics";
 import { useClinicSignups, useUpdateSignup } from "@/hooks/useClinicSignups";
-import { formatDateRange } from "@/lib/utils";
+import { formatDateRange, horseAge, horseAgeLabel } from "@/lib/utils";
 import * as Popover from "@radix-ui/react-popover";
 import { Loader2, Download, Pencil, Check, X, Users, Calendar, MapPin, Info } from "lucide-react";
 import { formatTimeValue } from "@/lib/timeBlocks";
@@ -92,7 +92,7 @@ export default function ClinicManagementPage({ params }: Props) {
           const h = sh.horse;
           rows.push([
             s.slot_name, s.rider_name, s.rider_email,
-            h?.name ?? "Removed", h?.registered_name ?? "", h?.age != null ? String(h.age) : "", h?.gender ?? "", h?.breed ?? "",
+            h?.name ?? "Removed", h?.registered_name ?? "", (horseAge(h?.birth_year)?.toString() ?? ""), h?.gender ?? "", h?.breed ?? "",
             h?.disciplines?.join(", ") ?? "", h?.usef_number ?? "",
             s.status, s.payment_status,
             sh.ride_time ? formatTimeValue(sh.ride_time) : "",
@@ -455,7 +455,7 @@ function HorseTag({ signupHorse }: { signupHorse: ClinicSignupHorse }) {
     return <span className="text-xs text-slate/50 italic">Horse removed</span>;
   }
 
-  const meta = [horse.age != null ? `${horse.age} yrs` : null, horse.gender].filter(Boolean).join(" • ");
+  const meta = [horseAgeLabel(horse.birth_year), horse.gender].filter(Boolean).join(" • ");
 
   return (
     <Popover.Root>
@@ -471,8 +471,8 @@ function HorseTag({ signupHorse }: { signupHorse: ClinicSignupHorse }) {
             <p className="text-xs text-slate italic mb-2">{horse.registered_name}</p>
           )}
           <div className="space-y-1 text-xs mt-2">
-            {horse.age != null && (
-              <p><span className="text-slate">Age:</span> <span className="text-charcoal">{horse.age} yrs</span></p>
+            {horseAgeLabel(horse.birth_year) && (
+              <p><span className="text-slate">Age:</span> <span className="text-charcoal">{horseAgeLabel(horse.birth_year)} ({horse.birth_year})</span></p>
             )}
             {horse.gender && (
               <p><span className="text-slate">Gender:</span> <span className="text-charcoal">{horse.gender}</span></p>
@@ -492,7 +492,7 @@ function HorseTag({ signupHorse }: { signupHorse: ClinicSignupHorse }) {
             {horse.usdf_number && (
               <p><span className="text-slate">USDF #:</span> <span className="text-charcoal">{horse.usdf_number}</span></p>
             )}
-            {horse.age == null && !horse.gender && !horse.breed && !horse.disciplines?.length && !horse.usef_number && (
+            {horse.birth_year == null && !horse.gender && !horse.breed && !horse.disciplines?.length && !horse.usef_number && (
               <p className="text-slate italic">No profile details</p>
             )}
           </div>

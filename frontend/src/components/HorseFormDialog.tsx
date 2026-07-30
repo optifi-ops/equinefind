@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
+import { horseAge } from "@/lib/utils";
 import type { Horse } from "@/types/horse";
 
 const DISCIPLINES = [
@@ -26,7 +27,7 @@ interface Props {
 export function HorseFormDialog({ open, onOpenChange, horse, onSubmit, loading }: Props) {
   const [name, setName] = useState("");
   const [registeredName, setRegisteredName] = useState("");
-  const [age, setAge] = useState("");
+  const [birthYear, setBirthYear] = useState("");
   const [gender, setGender] = useState("");
   const [breed, setBreed] = useState("");
   const [usefNumber, setUsefNumber] = useState("");
@@ -38,7 +39,7 @@ export function HorseFormDialog({ open, onOpenChange, horse, onSubmit, loading }
     if (horse) {
       setName(horse.name);
       setRegisteredName(horse.registered_name ?? "");
-      setAge(horse.age != null ? String(horse.age) : "");
+      setBirthYear(horse.birth_year != null ? String(horse.birth_year) : "");
       setGender(horse.gender ?? "");
       setBreed(horse.breed ?? "");
       setUsefNumber(horse.usef_number ?? "");
@@ -48,7 +49,7 @@ export function HorseFormDialog({ open, onOpenChange, horse, onSubmit, loading }
     } else {
       setName("");
       setRegisteredName("");
-      setAge("");
+      setBirthYear("");
       setGender("");
       setBreed("");
       setUsefNumber("");
@@ -69,7 +70,7 @@ export function HorseFormDialog({ open, onOpenChange, horse, onSubmit, loading }
     onSubmit({
       name,
       registered_name: registeredName || undefined,
-      age: age ? parseInt(age) : undefined,
+      birth_year: birthYear ? parseInt(birthYear) : undefined,
       gender: gender || undefined,
       breed: breed || undefined,
       usef_number: usefNumber || undefined,
@@ -119,16 +120,19 @@ export function HorseFormDialog({ open, onOpenChange, horse, onSubmit, loading }
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">Age</label>
+                <label className="block text-sm font-medium text-charcoal mb-1">Birth Year</label>
                 <input
                   type="number"
-                  min="0"
-                  max="50"
-                  value={age}
-                  onChange={(e) => setAge(e.target.value)}
+                  min="1985"
+                  max={new Date().getFullYear()}
+                  value={birthYear}
+                  onChange={(e) => setBirthYear(e.target.value)}
                   className="input"
-                  placeholder="e.g. 8"
+                  placeholder="e.g. 2018"
                 />
+                {horseAge(birthYear ? parseInt(birthYear) : undefined) != null && (
+                  <p className="text-xs text-slate mt-1">{horseAge(parseInt(birthYear))} yrs old</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-charcoal mb-1">Gender</label>

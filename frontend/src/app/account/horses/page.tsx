@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useHorses, useCreateHorse, useUpdateHorse, useDeleteHorse } from "@/hooks/useHorses";
 import { HorseFormDialog } from "@/components/HorseFormDialog";
-import { formatDiscipline } from "@/lib/utils";
+import { formatDiscipline, horseAgeLabel } from "@/lib/utils";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 import type { Horse } from "@/types/horse";
 
@@ -81,9 +81,9 @@ export default function AccountHorsesPage() {
                   {horse.registered_name && (
                     <p className="text-xs text-slate italic">{horse.registered_name}</p>
                   )}
-                  {(horse.age != null || horse.gender || horse.breed) && (
+                  {(horseAgeLabel(horse.birth_year) || horse.gender || horse.breed) && (
                     <p className="text-sm text-slate">
-                      {[horse.age != null ? `${horse.age} yrs` : null, horse.gender, horse.breed]
+                      {[horseAgeLabel(horse.birth_year), horse.gender, horse.breed]
                         .filter(Boolean)
                         .join(" • ")}
                     </p>
