@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronUp, ChevronDown, Loader2, Wand2, Clock, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronUp, ChevronDown, Loader2, Wand2, Clock, Calendar as CalendarIcon, AlertTriangle } from "lucide-react";
 import { useSaveSchedule } from "@/hooks/useClinicSignups";
 import { addMinutesToTime, toTimeInputValue } from "@/lib/timeBlocks";
 import { horseAgeLabel } from "@/lib/utils";
@@ -9,12 +9,20 @@ import type { ClinicSlot, ClinicSignup } from "@/types/clinic";
 
 const DEFAULT_RIDE_LENGTH = 45;
 
-interface Entry {
+interface Row {
   id: string; // clinic_signup_horses.id — one rider+horse lesson
   riderName: string;
   horseName: string;
   horseMeta: string; // "8 yrs • Gelding"
   status: ClinicSignup["status"];
+  time: string; // "HH:MM" for <input type="time">, "" if unset
+}
+
+/** Minutes since midnight for an "HH:MM" time; untimed rows sort to the end. */
+function timeToMinutes(time: string): number {
+  if (!time) return Number.POSITIVE_INFINITY;
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
 }
 
 interface Props {
@@ -67,18 +75,21 @@ function SlotScheduler({
   const saveSchedule = useSaveSchedule();
   const rideLength = slot.duration_minutes ?? DEFAULT_RIDE_LENGTH;
 
-  // Build the initial running order + the time ladder. Times are pinned to
-  // POSITIONS, not riders: `times[i]` is the ride time for whoever sits at
-  // row i. Moving a rider up/down changes which time they occupy — the times
-  // themselves stay in place and in order.
-  const initial = useMemo<{ list: Entry[]; times: string[] }>(() => {
-    const rows: { entry: Entry; time: string; sort: number; created: number }[] = [];
+  // The running order is DRIVEN BY TIME: rows are always sorted ascending by
+  // ride time (untimed rows sink to the bottom, keeping their relative order).
+  // Editing a time re-sorts that row into place; the arrows swap a rider's time
+  // with the neighbour's so they trade places in the running order.
+  const sortRows = (rs: Row[]): Row[] =>
+    [...rs].sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
+
+  const initialRows = useMemo<Row[]>(() => {
+    const rows: { row: Row; sort: number; created: number }[] = [];
     signups.forEach((s) => {
       const created = new Date(s.created_at).getTime();
       const horses = [...(s.horses ?? [])].sort((a, b) => a.sort_order - b.sort_order);
       horses.forEach((h) => {
         rows.push({
-          entry: {
+          row: {
             id: h.id,
             riderName: s.rider_name,
             horseName: h.horse?.name ?? "Horse removed",
@@ -86,59 +97,79 @@ function SlotScheduler({
               .filter(Boolean)
               .join(" • "),
             status: s.status,
+            time: toTimeInputValue(h.ride_time),
           },
-          time: toTimeInputValue(h.ride_time),
           sort: h.sort_order,
           created,
         });
       });
     });
-    // If a schedule was saved before, sort_order is globally meaningful; otherwise
-    // fall back to registration order (created_at).
-    const anyOrdered = rows.some((r) => r.sort > 0);
-    rows.sort((a, b) =>
-      anyOrdered ? a.sort - b.sort || a.created - b.created : a.created - b.created
+    // Primary order is by time; ties (and untimed rows) fall back to any saved
+    // order, then registration order.
+    rows.sort(
+      (a, b) =>
+        timeToMinutes(a.row.time) - timeToMinutes(b.row.time) ||
+        a.sort - b.sort ||
+        a.created - b.created
     );
-    return { list: rows.map((r) => r.entry), times: rows.map((r) => r.time) };
+    return rows.map((r) => r.row);
   }, [signups]);
 
-  const [entries, setEntries] = useState<Entry[]>(initial.list);
-  const [times, setTimes] = useState<string[]>(initial.times);
+  const [rows, setRows] = useState<Row[]>(initialRows);
   const [startTime, setStartTime] = useState<string>(
-    () => initial.times.find(Boolean) ?? "08:00"
+    () => rows.find((r) => r.time)?.time ?? "08:00"
   );
   const [dirty, setDirty] = useState(false);
 
-  // Move only the RIDER; the time stays anchored to the position, so the rider
-  // who moves up takes the earlier time and the displaced rider takes the later one.
+  // Swap this rider's time with the neighbour's, then re-sort — the rider moves
+  // up/down in the running order and takes that slot's time.
   const move = (index: number, dir: -1 | 1) => {
     const target = index + dir;
-    if (target < 0 || target >= entries.length) return;
-    const next = [...entries];
-    [next[index], next[target]] = [next[target], next[index]];
-    setEntries(next);
+    if (target < 0 || target >= rows.length) return;
+    const next = rows.map((r) => ({ ...r }));
+    const t = next[index].time;
+    next[index].time = next[target].time;
+    next[target].time = t;
+    setRows(sortRows(next));
     setDirty(true);
   };
 
-  const setRowTime = (index: number, value: string) => {
-    setTimes((prev) => prev.map((t, i) => (i === index ? value : t)));
+  const setRowTime = (id: string, value: string) => {
+    setRows((prev) => sortRows(prev.map((r) => (r.id === id ? { ...r, time: value } : r))));
     setDirty(true);
   };
 
   const autoAssign = () => {
     if (!startTime) return;
-    setTimes(entries.map((_, i) => toTimeInputValue(addMinutesToTime(startTime, i * rideLength))));
+    setRows((prev) =>
+      prev.map((r, i) => ({ ...r, time: toTimeInputValue(addMinutesToTime(startTime, i * rideLength)) }))
+    );
     setDirty(true);
   };
 
   const handleSave = () => {
-    const rows = entries.map((e, i) => ({
-      id: e.id,
-      ride_time: times[i] ? `${times[i]}:00` : null,
+    const payload = rows.map((r, i) => ({
+      id: r.id,
+      ride_time: r.time ? `${r.time}:00` : null,
       sort_order: i,
     }));
-    saveSchedule.mutate(rows, { onSuccess: () => setDirty(false) });
+    saveSchedule.mutate(payload, { onSuccess: () => setDirty(false) });
   };
+
+  // A ride overlaps the previous one if it starts before that ride ends.
+  const conflictIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (let i = 1; i < rows.length; i++) {
+      const prev = rows[i - 1];
+      const cur = rows[i];
+      if (!prev.time || !cur.time) continue;
+      if (timeToMinutes(cur.time) < timeToMinutes(prev.time) + rideLength) {
+        ids.add(prev.id);
+        ids.add(cur.id);
+      }
+    }
+    return ids;
+  }, [rows, rideLength]);
 
   const statusBadge: Record<string, string> = {
     confirmed: "bg-hunter/10 text-hunter",
@@ -162,7 +193,7 @@ function SlotScheduler({
             )}
           </h3>
           <p className="text-xs text-slate mt-0.5">
-            {entries.length} ride{entries.length !== 1 ? "s" : ""} ·{" "}
+            {rows.length} ride{rows.length !== 1 ? "s" : ""} ·{" "}
             <span className="inline-flex items-center gap-1">
               <Clock size={11} />
               {rideLength} min each
@@ -194,7 +225,14 @@ function SlotScheduler({
         </div>
       </div>
 
-      {entries.length === 0 ? (
+      {conflictIds.size > 0 && (
+        <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+          <AlertTriangle size={14} className="flex-shrink-0" />
+          Some ride times overlap (rides are {rideLength} min long). Adjust the highlighted times.
+        </div>
+      )}
+
+      {rows.length === 0 ? (
         <p className="text-sm text-slate">No riders in this slot.</p>
       ) : (
         <div className="border border-border rounded overflow-hidden">
@@ -217,8 +255,10 @@ function SlotScheduler({
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {entries.map((e, i) => (
-                <tr key={e.id}>
+              {rows.map((r, i) => {
+                const conflict = conflictIds.has(r.id);
+                return (
+                <tr key={r.id} className={conflict ? "bg-red-50" : ""}>
                   <td className="px-2 py-2">
                     <div className="flex flex-col">
                       <button
@@ -233,7 +273,7 @@ function SlotScheduler({
                       <button
                         type="button"
                         onClick={() => move(i, 1)}
-                        disabled={i === entries.length - 1}
+                        disabled={i === rows.length - 1}
                         className="text-slate hover:text-hunter disabled:opacity-25 disabled:hover:text-slate"
                         title="Move down"
                       >
@@ -243,33 +283,39 @@ function SlotScheduler({
                   </td>
                   <td className="px-3 py-2 text-slate">{i + 1}</td>
                   <td className="px-3 py-2">
-                    <span className="text-charcoal">{e.riderName}</span>
-                    {e.status === "waitlisted" && (
+                    <span className="text-charcoal">{r.riderName}</span>
+                    {r.status === "waitlisted" && (
                       <span className={`ml-2 px-1.5 py-0.5 text-[10px] rounded-full ${statusBadge.waitlisted}`}>
                         waitlist
                       </span>
                     )}
                   </td>
                   <td className="px-3 py-2">
-                    <span className="text-charcoal">{e.horseName}</span>
-                    {e.horseMeta && <span className="text-slate text-xs"> · {e.horseMeta}</span>}
+                    <span className="text-charcoal">{r.horseName}</span>
+                    {r.horseMeta && <span className="text-slate text-xs"> · {r.horseMeta}</span>}
                   </td>
                   <td className="px-3 py-2">
-                    <input
-                      type="time"
-                      value={times[i] ?? ""}
-                      onChange={(ev) => setRowTime(i, ev.target.value)}
-                      className="input py-1 text-sm w-28"
-                    />
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="time"
+                        value={r.time}
+                        onChange={(ev) => setRowTime(r.id, ev.target.value)}
+                        className={`input py-1 text-sm w-28 ${conflict ? "border-red-400" : ""}`}
+                      />
+                      {conflict && (
+                        <AlertTriangle size={14} className="text-red-500 flex-shrink-0" aria-label="Overlaps another ride" />
+                      )}
+                    </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
 
-      {entries.length > 0 && (
+      {rows.length > 0 && (
         <div className="flex items-center justify-end gap-3">
           {saveSchedule.isError && (
             <span className="text-xs text-red-500">
