@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Plus, Trash2, Clock } from "lucide-react";
 import type { Event } from "@/types/event";
 import type { ClinicDetails, ClinicSlot } from "@/types/clinic";
-import { generateTimeBlocks } from "@/lib/timeBlocks";
+import { generateTimeBlocks, ENABLE_TIME_BLOCK_SIGNUP } from "@/lib/timeBlocks";
 import type { Venue } from "@/types/venue";
 
 const DISCIPLINES = [
@@ -160,10 +160,10 @@ export function ClinicForm({ initialEvent, initialClinic, initialSlots, venues, 
         max_capacity: s.max_capacity ? parseInt(s.max_capacity) : undefined,
         price_cents: s.price ? Math.round(parseFloat(s.price) * 100) : undefined,
         sort_order: i,
-        duration_minutes: s.enable_time_blocks && s.duration_minutes ? parseInt(s.duration_minutes) : undefined,
-        start_time: s.enable_time_blocks && s.start_time ? `${s.start_time}:00` : undefined,
-        end_time: s.enable_time_blocks && s.end_time ? `${s.end_time}:00` : undefined,
-        riders_per_lesson: s.enable_time_blocks && s.riders_per_lesson ? parseInt(s.riders_per_lesson) : undefined,
+        duration_minutes: s.duration_minutes ? parseInt(s.duration_minutes) : undefined,
+        start_time: ENABLE_TIME_BLOCK_SIGNUP && s.enable_time_blocks && s.start_time ? `${s.start_time}:00` : undefined,
+        end_time: ENABLE_TIME_BLOCK_SIGNUP && s.enable_time_blocks && s.end_time ? `${s.end_time}:00` : undefined,
+        riders_per_lesson: ENABLE_TIME_BLOCK_SIGNUP && s.enable_time_blocks && s.riders_per_lesson ? parseInt(s.riders_per_lesson) : undefined,
       }));
 
     onSubmit({ event: eventData, clinicDetails, slots: parsedSlots });
@@ -428,7 +428,7 @@ export function ClinicForm({ initialEvent, initialClinic, initialSlots, venues, 
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs text-slate mb-0.5">Max Capacity</label>
                   <input
@@ -452,90 +452,95 @@ export function ClinicForm({ initialEvent, initialClinic, initialSlots, venues, 
                     placeholder="Free"
                   />
                 </div>
-              </div>
-
-              {/* Time Block Scheduling */}
-              <div className="border-t border-border pt-3 mt-1">
-                <label className="flex items-center gap-2 cursor-pointer">
+                <div>
+                  <label className="block text-xs text-slate mb-0.5 flex items-center gap-1">
+                    <Clock size={11} />
+                    Ride Length (min)
+                  </label>
                   <input
-                    type="checkbox"
-                    checked={slot.enable_time_blocks}
-                    onChange={(e) => updateSlot(index, "enable_time_blocks", e.target.checked ? "true" : "")}
-                    className="rounded border-border text-hunter focus:ring-hunter"
+                    type="number"
+                    min="5"
+                    step="5"
+                    value={slot.duration_minutes}
+                    onChange={(e) => updateSlot(index, "duration_minutes", e.target.value)}
+                    className="input"
+                    placeholder="e.g. 45"
                   />
-                  <span className="text-xs font-medium text-charcoal flex items-center gap-1">
-                    <Clock size={12} />
-                    Enable Time Block Scheduling
-                  </span>
-                </label>
-
-                {slot.enable_time_blocks && (
-                  <div className="mt-3 space-y-3 pl-6">
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-xs text-slate mb-0.5">Lesson Duration (min)</label>
-                        <input
-                          type="number"
-                          min="15"
-                          step="15"
-                          required
-                          value={slot.duration_minutes}
-                          onChange={(e) => updateSlot(index, "duration_minutes", e.target.value)}
-                          className="input"
-                          placeholder="60"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-slate mb-0.5">Start Time</label>
-                        <input
-                          type="time"
-                          required
-                          value={slot.start_time}
-                          onChange={(e) => updateSlot(index, "start_time", e.target.value)}
-                          className="input"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-slate mb-0.5">End Time</label>
-                        <input
-                          type="time"
-                          required
-                          value={slot.end_time}
-                          onChange={(e) => updateSlot(index, "end_time", e.target.value)}
-                          className="input"
-                        />
-                      </div>
-                    </div>
-                    <div className="w-1/3">
-                      <label className="block text-xs text-slate mb-0.5">Riders per Lesson</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={slot.riders_per_lesson}
-                        onChange={(e) => updateSlot(index, "riders_per_lesson", e.target.value)}
-                        className="input"
-                        placeholder="1"
-                      />
-                    </div>
-                    {slot.duration_minutes && slot.start_time && slot.end_time && (() => {
-                      const blocks = generateTimeBlocks(
-                        `${slot.start_time}:00`,
-                        `${slot.end_time}:00`,
-                        parseInt(slot.duration_minutes)
-                      );
-                      return blocks.length > 0 ? (
-                        <p className="text-xs text-hunter">
-                          Generates {blocks.length} time block{blocks.length !== 1 ? "s" : ""}: {blocks.map((b) => b.time).join(", ")}
-                        </p>
-                      ) : (
-                        <p className="text-xs text-red-500">
-                          No time blocks fit in this window. Adjust duration or time range.
-                        </p>
-                      );
-                    })()}
-                  </div>
-                )}
+                </div>
               </div>
+              <p className="text-xs text-slate">
+                Ride length is used to auto-fill ride times when you schedule this slot after registration closes.
+              </p>
+
+              {/* Time Block Scheduling (rider self-select) — retired after beta, kept for possible future use */}
+              {ENABLE_TIME_BLOCK_SIGNUP && (
+                <div className="border-t border-border pt-3 mt-1">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={slot.enable_time_blocks}
+                      onChange={(e) => updateSlot(index, "enable_time_blocks", e.target.checked ? "true" : "")}
+                      className="rounded border-border text-hunter focus:ring-hunter"
+                    />
+                    <span className="text-xs font-medium text-charcoal flex items-center gap-1">
+                      <Clock size={12} />
+                      Enable Time Block Scheduling
+                    </span>
+                  </label>
+
+                  {slot.enable_time_blocks && (
+                    <div className="mt-3 space-y-3 pl-6">
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs text-slate mb-0.5">Start Time</label>
+                          <input
+                            type="time"
+                            value={slot.start_time}
+                            onChange={(e) => updateSlot(index, "start_time", e.target.value)}
+                            className="input"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-slate mb-0.5">End Time</label>
+                          <input
+                            type="time"
+                            value={slot.end_time}
+                            onChange={(e) => updateSlot(index, "end_time", e.target.value)}
+                            className="input"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-slate mb-0.5">Riders per Lesson</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={slot.riders_per_lesson}
+                            onChange={(e) => updateSlot(index, "riders_per_lesson", e.target.value)}
+                            className="input"
+                            placeholder="1"
+                          />
+                        </div>
+                      </div>
+                      {slot.duration_minutes && slot.start_time && slot.end_time && (() => {
+                        const blocks = generateTimeBlocks(
+                          `${slot.start_time}:00`,
+                          `${slot.end_time}:00`,
+                          parseInt(slot.duration_minutes)
+                        );
+                        return blocks.length > 0 ? (
+                          <p className="text-xs text-hunter">
+                            Generates {blocks.length} time block{blocks.length !== 1 ? "s" : ""}: {blocks.map((b) => b.time).join(", ")}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-red-500">
+                            No time blocks fit in this window. Adjust duration or time range.
+                          </p>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

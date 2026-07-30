@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useClinicDetails, useClinicSlotCounts } from "@/hooks/useClinics";
 import { useMySignups, useSlotBookedTimes } from "@/hooks/useClinicSignups";
 import { ClinicSignupDialog } from "./ClinicSignupDialog";
-import { generateTimeBlocks, markAvailability } from "@/lib/timeBlocks";
+import { generateTimeBlocks, markAvailability, ENABLE_TIME_BLOCK_SIGNUP } from "@/lib/timeBlocks";
 import { Loader2, Users, Clock } from "lucide-react";
 import type { ClinicSlot } from "@/types/clinic";
 
@@ -83,7 +83,7 @@ export function ClinicSignupSection({ eventId }: Props) {
           const isFull = slot.max_capacity ? confirmedCount >= slot.max_capacity : false;
           const spotsLeft = slot.max_capacity ? slot.max_capacity - confirmedCount : null;
           const alreadySignedUp = userSignedUpSlots.has(slot.id);
-          const hasTimeBlocks = !!(slot.duration_minutes && slot.start_time && slot.end_time);
+          const hasTimeBlocks = ENABLE_TIME_BLOCK_SIGNUP && !!(slot.duration_minutes && slot.start_time && slot.end_time);
           const slotBookedTimes = bookedTimesMap?.[slot.id] ?? [];
           const availableTimeCount = hasTimeBlocks
             ? markAvailability(

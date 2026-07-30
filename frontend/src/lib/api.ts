@@ -494,6 +494,24 @@ export const clinicSignupApi = {
       .eq("id", signupId);
     if (error) throw new Error(error.message);
   },
+
+  // Persist the running order + assigned ride time for each horse in a slot.
+  // Each row is one clinic_signup_horses record (one rider+horse lesson).
+  saveSchedule: async (
+    rows: { id: string; ride_time: string | null; sort_order: number }[]
+  ): Promise<void> => {
+    for (const row of rows) {
+      const { error, data } = await supabase
+        .from("clinic_signup_horses")
+        .update({ ride_time: row.ride_time, sort_order: row.sort_order })
+        .eq("id", row.id)
+        .select("id");
+      if (error) throw new Error(error.message);
+      if (!data || data.length === 0) {
+        throw new Error("Schedule update was blocked — make sure you are the clinic organizer.");
+      }
+    }
+  },
 };
 
 export const venuesApi = {

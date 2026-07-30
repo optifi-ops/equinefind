@@ -6,7 +6,7 @@ import { X, Loader2, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useHorses } from "@/hooks/useHorses";
 import { useCreateSignup } from "@/hooks/useClinicSignups";
-import { generateTimeBlocks, markAvailability, formatTimeValue } from "@/lib/timeBlocks";
+import { generateTimeBlocks, markAvailability, formatTimeValue, ENABLE_TIME_BLOCK_SIGNUP } from "@/lib/timeBlocks";
 import type { ClinicSlot } from "@/types/clinic";
 
 type Step = "horses" | "times" | "confirm";
@@ -31,7 +31,7 @@ export function ClinicSignupDialog({ open, onOpenChange, slot, isFull, eventId, 
   const [riderNotes, setRiderNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const hasTimeBlocks = !!(slot.duration_minutes && slot.start_time && slot.end_time);
+  const hasTimeBlocks = ENABLE_TIME_BLOCK_SIGNUP && !!(slot.duration_minutes && slot.start_time && slot.end_time);
 
   const timeBlocks = useMemo(() => {
     if (!hasTimeBlocks) return [];

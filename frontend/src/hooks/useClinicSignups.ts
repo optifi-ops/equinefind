@@ -97,3 +97,16 @@ export function useUpdateSignup() {
     },
   });
 }
+
+export function useSaveSchedule() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (rows: { id: string; ride_time: string | null; sort_order: number }[]) =>
+      clinicSignupApi.saveSchedule(rows),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clinic-signups"] });
+      queryClient.invalidateQueries({ queryKey: ["my-signups"] });
+    },
+  });
+}

@@ -9,6 +9,7 @@ import { formatDateRange } from "@/lib/utils";
 import * as Popover from "@radix-ui/react-popover";
 import { Loader2, Download, Pencil, Check, X, Users, Calendar, MapPin, Info } from "lucide-react";
 import { formatTimeValue } from "@/lib/timeBlocks";
+import { ClinicScheduler } from "@/components/ClinicScheduler";
 import type { ClinicSignup, ClinicSignupHorse } from "@/types/clinic";
 
 interface Props {
@@ -24,6 +25,7 @@ interface EventSummary {
 
 export default function ClinicManagementPage({ params }: Props) {
   const eventId = params.id;
+  const [tab, setTab] = useState<"signups" | "scheduling">("signups");
   const [activeSlot, setActiveSlot] = useState<string | null>(null);
   const { data: clinicData, isLoading: clinicLoading } = useClinicDetails(eventId);
   const { data: _counts } = useClinicSlotCounts(clinicData?.id);
@@ -164,6 +166,29 @@ export default function ClinicManagementPage({ params }: Props) {
         </div>
       </div>
 
+      <div className="border-b border-border flex gap-6">
+        <button
+          onClick={() => setTab("signups")}
+          className={`pb-2 -mb-px text-sm font-medium border-b-2 transition-colors ${
+            tab === "signups" ? "border-hunter text-charcoal" : "border-transparent text-slate hover:text-charcoal"
+          }`}
+        >
+          Sign-ups
+        </button>
+        <button
+          onClick={() => setTab("scheduling")}
+          className={`pb-2 -mb-px text-sm font-medium border-b-2 transition-colors ${
+            tab === "scheduling" ? "border-hunter text-charcoal" : "border-transparent text-slate hover:text-charcoal"
+          }`}
+        >
+          Scheduling
+        </button>
+      </div>
+
+      {tab === "scheduling" ? (
+        <ClinicScheduler slots={slots} signups={signups ?? []} />
+      ) : (
+      <>
       <div className="flex gap-2 flex-wrap">
         <button
           onClick={() => setActiveSlot(null)}
@@ -252,6 +277,8 @@ export default function ClinicManagementPage({ params }: Props) {
           <Users size={32} className="mx-auto text-slate/40 mb-2" />
           <p className="text-slate text-sm">No signups yet{activeSlot ? " for this slot" : ""}.</p>
         </div>
+      )}
+      </>
       )}
 
       {clinicData.clinician_name && (

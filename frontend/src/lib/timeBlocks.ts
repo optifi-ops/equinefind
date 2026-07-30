@@ -5,6 +5,36 @@ export interface TimeBlock {
   bookedCount: number;
 }
 
+/**
+ * Master switch for the rider-facing time-block signup feature (organizer
+ * defines a time grid, riders self-select a slot during signup). Turned off
+ * after beta — organizers prefer to assign ride times themselves once
+ * registration closes (see the Scheduling tab). The code is kept intact so the
+ * feature can be re-enabled by flipping this to `true`.
+ */
+export const ENABLE_TIME_BLOCK_SIGNUP = false;
+
+/**
+ * Add `minutes` to an "HH:MM" or "HH:MM:SS" time, returning "HH:MM:SS".
+ * Used by the Scheduling tab to cascade ride times off a slot's start time.
+ */
+export function addMinutesToTime(time: string, minutes: number): string {
+  const [h, m] = time.split(":").map(Number);
+  const total = h * 60 + m + minutes;
+  const wrapped = ((total % 1440) + 1440) % 1440;
+  const hh = Math.floor(wrapped / 60).toString().padStart(2, "0");
+  const mm = (wrapped % 60).toString().padStart(2, "0");
+  return `${hh}:${mm}:00`;
+}
+
+/** Normalize a time value to the "HH:MM" form an <input type="time"> expects. */
+export function toTimeInputValue(value: string | null | undefined): string {
+  if (!value) return "";
+  const [h, m] = value.split(":");
+  if (h === undefined || m === undefined) return "";
+  return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+}
+
 export function generateTimeBlocks(
   startTime: string,
   endTime: string,
