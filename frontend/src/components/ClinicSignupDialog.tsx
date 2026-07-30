@@ -201,7 +201,9 @@ export function ClinicSignupDialog({ open, onOpenChange, slot, isFull, eventId, 
                     <div>
                       <p className="font-medium text-charcoal text-sm">{horse.name}</p>
                       <p className="text-xs text-slate">
-                        {[horse.breed, horse.level].filter(Boolean).join(" • ") || "No details"}
+                        {[horse.age != null ? `${horse.age} yrs` : null, horse.gender, horse.breed]
+                          .filter(Boolean)
+                          .join(" • ") || "No details"}
                       </p>
                     </div>
                     {selectedHorseIds.includes(horse.id) && (

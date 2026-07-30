@@ -12,6 +12,7 @@ interface Entry {
   id: string; // clinic_signup_horses.id — one rider+horse lesson
   riderName: string;
   horseName: string;
+  horseMeta: string; // "8 yrs • Gelding"
   status: ClinicSignup["status"];
   time: string; // "HH:MM" for <input type="time">, "" if unset
 }
@@ -79,6 +80,9 @@ function SlotScheduler({
             id: h.id,
             riderName: s.rider_name,
             horseName: h.horse?.name ?? "Horse removed",
+            horseMeta: [h.horse?.age != null ? `${h.horse.age} yrs` : null, h.horse?.gender]
+              .filter(Boolean)
+              .join(" • "),
             status: s.status,
             time: toTimeInputValue(h.ride_time),
           },
@@ -246,7 +250,10 @@ function SlotScheduler({
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-charcoal">{e.horseName}</td>
+                  <td className="px-3 py-2">
+                    <span className="text-charcoal">{e.horseName}</span>
+                    {e.horseMeta && <span className="text-slate text-xs"> · {e.horseMeta}</span>}
+                  </td>
                   <td className="px-3 py-2">
                     <input
                       type="time"

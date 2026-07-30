@@ -78,7 +78,16 @@ export default function AccountHorsesPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-medium text-charcoal">{horse.name}</h3>
-                  {horse.breed && <p className="text-sm text-slate">{horse.breed}</p>}
+                  {horse.registered_name && (
+                    <p className="text-xs text-slate italic">{horse.registered_name}</p>
+                  )}
+                  {(horse.age != null || horse.gender || horse.breed) && (
+                    <p className="text-sm text-slate">
+                      {[horse.age != null ? `${horse.age} yrs` : null, horse.gender, horse.breed]
+                        .filter(Boolean)
+                        .join(" • ")}
+                    </p>
+                  )}
                 </div>
                 {confirmingId === horse.id ? (
                   <div className="flex items-center gap-1.5">
@@ -126,10 +135,6 @@ export default function AccountHorsesPage() {
                     </span>
                   ))}
                 </div>
-              )}
-
-              {horse.level && (
-                <p className="text-xs text-slate">Level: {horse.level}</p>
               )}
 
               {(horse.usef_number || horse.usea_number || horse.usdf_number) && (

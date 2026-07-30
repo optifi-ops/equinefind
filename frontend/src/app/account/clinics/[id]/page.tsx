@@ -84,7 +84,7 @@ export default function ClinicManagementPage({ params }: Props) {
   const exportCSV = () => {
     if (!signups) return;
     const active = signups.filter((s) => s.status !== "cancelled");
-    const headers = ["Slot", "Rider Name", "Email", "Horse", "Breed", "Level", "Disciplines", "Registration #", "Status", "Payment", "Ride Time", "Rider Notes", "Organizer Notes", "Signed Up"];
+    const headers = ["Slot", "Rider Name", "Email", "Barn Name", "Registered Name", "Age", "Gender", "Breed", "Disciplines", "Registration #", "Status", "Payment", "Ride Time", "Rider Notes", "Organizer Notes", "Signed Up"];
     const rows: string[][] = [];
     for (const s of active) {
       if (s.horses && s.horses.length > 0) {
@@ -92,7 +92,7 @@ export default function ClinicManagementPage({ params }: Props) {
           const h = sh.horse;
           rows.push([
             s.slot_name, s.rider_name, s.rider_email,
-            h?.name ?? "Removed", h?.breed ?? "", h?.level ?? "",
+            h?.name ?? "Removed", h?.registered_name ?? "", h?.age != null ? String(h.age) : "", h?.gender ?? "", h?.breed ?? "",
             h?.disciplines?.join(", ") ?? "", h?.usef_number ?? "",
             s.status, s.payment_status,
             sh.ride_time ? formatTimeValue(sh.ride_time) : "",
@@ -103,7 +103,7 @@ export default function ClinicManagementPage({ params }: Props) {
       } else {
         rows.push([
           s.slot_name, s.rider_name, s.rider_email,
-          s.horse_name ?? "", "", "", "", "",
+          s.horse_name ?? "", "", "", "", "", "", "",
           s.status, s.payment_status,
           s.ride_time ?? "",
           s.rider_notes ?? "", s.organizer_notes ?? "",
@@ -455,21 +455,30 @@ function HorseTag({ signupHorse }: { signupHorse: ClinicSignupHorse }) {
     return <span className="text-xs text-slate/50 italic">Horse removed</span>;
   }
 
+  const meta = [horse.age != null ? `${horse.age} yrs` : null, horse.gender].filter(Boolean).join(" • ");
+
   return (
     <Popover.Root>
-      <Popover.Trigger className="text-xs text-hunter hover:underline cursor-pointer flex items-center gap-1">
-        {horse.name}
-        <Info size={10} className="text-slate" />
+      <Popover.Trigger className="text-xs cursor-pointer flex items-center gap-1 text-left">
+        <span className="text-hunter hover:underline font-medium">{horse.name}</span>
+        {meta && <span className="text-slate">· {meta}</span>}
+        <Info size={10} className="text-slate flex-shrink-0" />
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content className="bg-white border border-border rounded-lg shadow-lg p-4 w-64 z-50" sideOffset={5}>
-          <p className="font-medium text-charcoal text-sm mb-2">{horse.name}</p>
-          <div className="space-y-1 text-xs">
+          <p className="font-medium text-charcoal text-sm">{horse.name}</p>
+          {horse.registered_name && (
+            <p className="text-xs text-slate italic mb-2">{horse.registered_name}</p>
+          )}
+          <div className="space-y-1 text-xs mt-2">
+            {horse.age != null && (
+              <p><span className="text-slate">Age:</span> <span className="text-charcoal">{horse.age} yrs</span></p>
+            )}
+            {horse.gender && (
+              <p><span className="text-slate">Gender:</span> <span className="text-charcoal">{horse.gender}</span></p>
+            )}
             {horse.breed && (
               <p><span className="text-slate">Breed:</span> <span className="text-charcoal">{horse.breed}</span></p>
-            )}
-            {horse.level && (
-              <p><span className="text-slate">Level:</span> <span className="text-charcoal">{horse.level}</span></p>
             )}
             {horse.disciplines && horse.disciplines.length > 0 && (
               <p><span className="text-slate">Disciplines:</span> <span className="text-charcoal">{horse.disciplines.join(", ")}</span></p>
@@ -483,7 +492,7 @@ function HorseTag({ signupHorse }: { signupHorse: ClinicSignupHorse }) {
             {horse.usdf_number && (
               <p><span className="text-slate">USDF #:</span> <span className="text-charcoal">{horse.usdf_number}</span></p>
             )}
-            {!horse.breed && !horse.level && !horse.disciplines?.length && !horse.usef_number && (
+            {horse.age == null && !horse.gender && !horse.breed && !horse.disciplines?.length && !horse.usef_number && (
               <p className="text-slate italic">No profile details</p>
             )}
           </div>

@@ -13,15 +13,7 @@ const DISCIPLINES = [
   { value: "equitation", label: "Equitation" },
 ];
 
-const LEVELS = [
-  "Beginner Novice",
-  "Novice",
-  "Training",
-  "Modified",
-  "Preliminary",
-  "Intermediate",
-  "Advanced",
-];
+const GENDERS = ["Mare", "Gelding", "Stallion"];
 
 interface Props {
   open: boolean;
@@ -33,29 +25,35 @@ interface Props {
 
 export function HorseFormDialog({ open, onOpenChange, horse, onSubmit, loading }: Props) {
   const [name, setName] = useState("");
+  const [registeredName, setRegisteredName] = useState("");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
   const [breed, setBreed] = useState("");
   const [usefNumber, setUsefNumber] = useState("");
   const [useaNumber, setUseaNumber] = useState("");
   const [usdfNumber, setUsdfNumber] = useState("");
-  const [level, setLevel] = useState("");
   const [disciplines, setDisciplines] = useState<string[]>([]);
 
   useEffect(() => {
     if (horse) {
       setName(horse.name);
+      setRegisteredName(horse.registered_name ?? "");
+      setAge(horse.age != null ? String(horse.age) : "");
+      setGender(horse.gender ?? "");
       setBreed(horse.breed ?? "");
       setUsefNumber(horse.usef_number ?? "");
       setUseaNumber(horse.usea_number ?? "");
       setUsdfNumber(horse.usdf_number ?? "");
-      setLevel(horse.level ?? "");
       setDisciplines(horse.disciplines ?? []);
     } else {
       setName("");
+      setRegisteredName("");
+      setAge("");
+      setGender("");
       setBreed("");
       setUsefNumber("");
       setUseaNumber("");
       setUsdfNumber("");
-      setLevel("");
       setDisciplines([]);
     }
   }, [horse, open]);
@@ -70,11 +68,13 @@ export function HorseFormDialog({ open, onOpenChange, horse, onSubmit, loading }
     e.preventDefault();
     onSubmit({
       name,
+      registered_name: registeredName || undefined,
+      age: age ? parseInt(age) : undefined,
+      gender: gender || undefined,
       breed: breed || undefined,
       usef_number: usefNumber || undefined,
       usea_number: useaNumber || undefined,
       usdf_number: usdfNumber || undefined,
-      level: level || undefined,
       disciplines,
     });
   };
@@ -95,7 +95,7 @@ export function HorseFormDialog({ open, onOpenChange, horse, onSubmit, loading }
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-charcoal mb-1">Name *</label>
+              <label className="block text-sm font-medium text-charcoal mb-1">Barn Name *</label>
               <input
                 type="text"
                 value={name}
@@ -104,6 +104,45 @@ export function HorseFormDialog({ open, onOpenChange, horse, onSubmit, loading }
                 className="input"
                 placeholder="e.g. Whiskey"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-charcoal mb-1">Registered Name</label>
+              <input
+                type="text"
+                value={registeredName}
+                onChange={(e) => setRegisteredName(e.target.value)}
+                className="input"
+                placeholder="e.g. Whiskey Business MF"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1">Age</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="50"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  className="input"
+                  placeholder="e.g. 8"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-charcoal mb-1">Gender</label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="input"
+                >
+                  <option value="">Select</option>
+                  {GENDERS.map((g) => (
+                    <option key={g} value={g}>{g}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div>
@@ -135,20 +174,6 @@ export function HorseFormDialog({ open, onOpenChange, horse, onSubmit, loading }
                   </button>
                 ))}
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-charcoal mb-1">Level</label>
-              <select
-                value={level}
-                onChange={(e) => setLevel(e.target.value)}
-                className="input"
-              >
-                <option value="">Select level</option>
-                {LEVELS.map((l) => (
-                  <option key={l} value={l}>{l}</option>
-                ))}
-              </select>
             </div>
 
             <div className="border-t border-border pt-4">
